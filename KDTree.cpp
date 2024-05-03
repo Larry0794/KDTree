@@ -186,15 +186,20 @@ KDNodePtr KDTree::nearest_(const point_t &pt)
                 }
                 curr_root = stack.back().first;
                 stack.back().second = true;
-                if (curr == curr_root->left && bool(*curr_root->right))
+                // 剪枝判断，level-1为当前根节点划分子树的依据维度
+                double dx = point_t(*curr_root)[level - 1] - pt[level - 1];
+                if (dx * dx <= best_dist)
                 {
-                    curr = curr_root->right;
-                    break;
-                }
-                else if (bool(*curr_root->left))
-                {
-                    curr = curr_root->left;
-                    break;
+                    if (curr == curr_root->left && bool(*curr_root->right))
+                    {
+                        curr = curr_root->right;
+                        break;
+                    }
+                    else if (bool(*curr_root->left))
+                    {
+                        curr = curr_root->left;
+                        break;
+                    }
                 }
             }
         }
@@ -274,15 +279,19 @@ pointIndexArr KDTree::neighborhood_( //
                 }
                 curr_root = stack.back().first;
                 stack.back().second = true;
-                if (curr == curr_root->left && bool(*curr_root->right))
+                double dx = point_t(*curr_root)[level - 1] - pt[level - 1];
+                if (dx * dx <= limit_dist)
                 {
-                    curr = curr_root->right;
-                    break;
-                }
-                else if (bool(*curr_root->left))
-                {
-                    curr = curr_root->left;
-                    break;
+                    if (curr == curr_root->left && bool(*curr_root->right))
+                    {
+                        curr = curr_root->right;
+                        break;
+                    }
+                    else if (bool(*curr_root->left))
+                    {
+                        curr = curr_root->left;
+                        break;
+                    }
                 }
             }
         }
@@ -296,7 +305,7 @@ pointIndexArr KDTree::neighborhood_( //
                 nbh.push_back(pointIndex(*curr));
             }
             // 子节点入栈
-            double dx = pt[level] - curr_pt[level];
+            double dx = pt[level - 1] - curr_pt[level - 1];
             // select which branch makes sense to check
             if (dx < 0)
             {
@@ -340,6 +349,125 @@ indexArr KDTree::neighborhood_indices( //
     const double &rad)
 {
     pointIndexArr nbh = neighborhood_(pt, rad);
+    indexArr nbhi;
+    nbhi.resize(nbh.size());
+    std::transform(nbh.begin(), nbh.end(), nbhi.begin(),
+                   [](pointIndex x)
+                   { return x.second; });
+    return nbhi;
+}
+
+pointIndexArr KDTree::neighborhood_( //
+    const point_t &pt,               //
+    const size_t &n                  //
+)
+{
+    pointIndexArr nbh{pointIndex(*root)};
+    size_t pos = 1;
+
+    size_t dim = pt.size();
+
+    KDNodePtr curr = root;
+    size_t level = 0;
+    std::vector<std::pair<KDNodePtr, bool>> stack;
+    do
+    {
+        // null
+        if (!bool(*curr))
+        {
+            KDNodePtr curr_root;
+            while (!stack.empty())
+            {
+                if (stack.back().second)
+                {
+                    curr = stack.back().first;
+                    stack.pop_back();
+                    level = (level - 1) % dim;
+                    continue;
+                }
+                curr_root = stack.back().first;
+                stack.back().second = true;
+                double dx = point_t(*curr_root)[level - 1] - pt[level - 1];
+                if (dx * dx <= dist2(nbh[pos - 1].first, pt))
+                {
+                    if (curr == curr_root->left && bool(*curr_root->right))
+                    {
+                        curr = curr_root->right;
+                        break;
+                    }
+                    else if (bool(*curr_root->left))
+                    {
+                        curr = curr_root->left;
+                        break;
+                    }
+                }
+            }
+        }
+        else
+        {
+            point_t curr_pt(*curr);
+            // 更新最有节点、距离
+            double d = dist2(curr_pt, pt);
+            if (d < dist2(nbh[pos - 1].first, pt))
+            {
+                int i = pos - 2;
+                if (pos <= n - 1)
+                {
+                    nbh.push_back(nbh[pos - 1]);
+                    ++pos;
+                }
+                while (i >= 0 && d < dist2(nbh[i].first, pt))
+                {
+                    nbh[i + 1] = nbh[i];
+                    --i;
+                }
+                nbh[i + 1] = pointIndex(*curr);
+            }
+            // 子节点入栈
+            double dx = pt[level] - curr_pt[level];
+            // select which branch makes sense to check
+            if (dx < 0)
+            {
+                stack.push_back(std::make_pair(curr, false));
+                level = (level + 1) % dim;
+                curr = curr->left;
+            }
+            else
+            {
+                stack.push_back(std::make_pair(curr, false));
+                level = (level + 1) % dim;
+                curr = curr->right;
+            }
+        }
+    } while (!stack.empty());
+    return nbh;
+};
+
+pointIndexArr KDTree::neighborhood( //
+    const point_t &pt,              //
+    const size_t &n)
+{
+    return neighborhood_(pt, n);
+}
+
+pointVec KDTree::neighborhood_points( //
+    const point_t &pt,                //
+    const size_t &n)
+{
+    pointIndexArr nbh = neighborhood_(pt, n);
+    pointVec nbhp;
+    nbhp.resize(nbh.size());
+    std::transform(nbh.begin(), nbh.end(), nbhp.begin(),
+                   [](pointIndex x)
+                   { return x.first; });
+    return nbhp;
+}
+
+indexArr KDTree::neighborhood_indices( //
+    const point_t &pt,                 //
+    const size_t &n)
+{
+    pointIndexArr nbh = neighborhood_(pt, n);
     indexArr nbhi;
     nbhi.resize(nbh.size());
     std::transform(nbh.begin(), nbh.end(), nbhi.begin(),

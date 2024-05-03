@@ -121,4 +121,23 @@ public:
     indexArr neighborhood_indices( //
         const point_t &pt,         //
         const double &rad);
+
+private:
+    pointIndexArr neighborhood_( //
+        const point_t &pt,       //
+        const size_t &n          //
+    );
+
+public:
+    pointIndexArr neighborhood( //
+        const point_t &pt,      //
+        const size_t &n);
+
+    pointVec neighborhood_points( //
+        const point_t &pt,        //
+        const size_t &n);
+
+    indexArr neighborhood_indices( //
+        const point_t &pt,         //
+        const size_t &n);
 };

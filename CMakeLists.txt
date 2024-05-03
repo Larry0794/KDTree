@@ -14,7 +14,7 @@ set(CMAKE_NM      "/usr/bin/gcc-nm")
 set(CMAKE_OBJDUMP "/usr/bin/objdump")
 set(CMAKE_RANLIB  "/usr/bin/gcc-ranlib")
 
-set(CMAKE_BUILD_TYPE RELEASE)
+# set(CMAKE_BUILD_TYPE RELEASE)
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
