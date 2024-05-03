@@ -388,7 +388,7 @@ pointIndexArr KDTree::neighborhood_( //
                 curr_root = stack.back().first;
                 stack.back().second = true;
                 double dx = point_t(*curr_root)[level - 1] - pt[level - 1];
-                if (dx * dx <= dist2(nbh[pos - 1].first, pt))
+                if (pos <= n - 1 || dx * dx <= dist2(nbh[pos - 1].first, pt))
                 {
                     if (curr == curr_root->left && bool(*curr_root->right))
                     {
@@ -422,6 +422,11 @@ pointIndexArr KDTree::neighborhood_( //
                     --i;
                 }
                 nbh[i + 1] = pointIndex(*curr);
+            }
+            else if (pos > 1 && pos <= n - 1)
+            {
+                nbh.push_back(pointIndex(*curr));
+                ++pos;
             }
             // 子节点入栈
             double dx = pt[level] - curr_pt[level];

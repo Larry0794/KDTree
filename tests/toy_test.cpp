@@ -67,7 +67,8 @@ int main()
     pt = {.0, .5};
 
     */
-    auto res2 = tree.neighborhood_points(pt, (size_t)3);
+    std::cout << "---------\n";
+    auto res2 = tree.neighborhood_points(pt, (size_t)100);
     for (point_t a : res2)
     {
         for (double b : a)
